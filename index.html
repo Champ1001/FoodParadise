@@ -298,7 +298,6 @@ const menuData=[
 {name:"Cheese Burger",img:"https://images.unsplash.com/photo-1550547660-d9450f859349",top:true,category:"burger"},
 {name:"Cold Coffee",img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735",top:true,category:"drink"},
 {name:"Chocolate Cake",img:"https://images.unsplash.com/photo-1578985545062-69928b1d9587",top:true,category:"dessert"},
-
 // NEW ITEMS (10+)
 {name:"Margherita Pizza",img:"https://images.unsplash.com/photo-1593560708920-61dd98c46a4e",category:"pizza"},
 {name:"Pepperoni Pizza",img:"https://images.unsplash.com/photo-1604382355076-af4b0eb60143",category:"pizza"},
@@ -367,7 +366,7 @@ function updateCart(){
 orderList.innerHTML=""
 total=0
 cartItems=0
-
+const totalEl = document.getElementById("total")
 Object.keys(cart).forEach(name=>{
 let item=cart[name]
 total+=item.price*item.qty
@@ -405,7 +404,11 @@ function placeOrder(){
 if(cartItems===0) return
 
 let history=JSON.parse(localStorage.getItem("orders"))||[]
-history.push({date:new Date().toLocaleString(),items:cart,total})
+history.push({
+  date: new Date().toLocaleString(),
+  items: JSON.parse(JSON.stringify(cart)), // ✅ deep copy
+  total
+})
 localStorage.setItem("orders",JSON.stringify(history))
 
 cart={}
@@ -418,18 +421,23 @@ loadHistory()
 }
 
 function loadHistory(){
-let history=JSON.parse(localStorage.getItem("orders"))||[]
-historyEl.innerHTML=""
+let historyData = JSON.parse(localStorage.getItem("orders")) || []
 
-history.reverse().forEach(o=>{
+const historyEl = document.getElementById("history") // ✅ FIX
+historyEl.innerHTML = ""
+
+historyData.slice().reverse().forEach(o=>{
 let items=""
+
 Object.keys(o.items).forEach(n=>{
-items+=`${n} x${o.items[n].qty}<br>`
+items += `${n} x${o.items[n].qty}<br>`
 })
 
-historyEl.innerHTML+=`
-<div class="history-card">
-<b>${o.date}</b><br>${items}<br>Total $${o.total}
+historyEl.innerHTML += `
+<div class="history-card" style="padding:10px;margin:10px;background:#1c1c1c;border-radius:8px">
+<b>${o.date}</b><br>
+${items}
+<br>Total $${o.total}
 </div>`
 })
 }

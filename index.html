@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Food Paradise</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+
+body{
+background:#0f0f0f;
+color:white;
+padding-bottom:300px;
+}
+
+/* NAVBAR */
+
+nav{
+position:sticky;
+top:0;
+background:#000;
+padding:12px;
+z-index:100;
+box-shadow:0 2px 10px rgba(0,0,0,0.5);
+}
+
+.nav-container{
+display:flex;
+flex-wrap:wrap;
+justify-content:space-between;
+align-items:center;
+}
+
+.logo{
+font-size:22px;
+color:#ff9800;
+font-weight:bold;
+}
+
+.nav-buttons{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+}
+
+.nav-buttons button{
+background:#ff9800;
+border:none;
+padding:6px 10px;
+cursor:pointer;
+border-radius:4px;
+font-size:13px;
+transition:0.2s;
+}
+
+.nav-buttons button:hover{
+background:#ffa726;
+}
+
+.search{
+width:100%;
+margin-top:8px;
+padding:8px;
+border:none;
+border-radius:4px;
+}
+
+/* HERO */
+
+.hero{
+height:40vh;
+background:url("https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600");
+background-size:cover;
+background-position:center;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+text-align:center;
+}
+
+.hero h1{font-size:32px}
+
+/* GRID */
+
+.food-container{
+padding:15px;
+display:grid;
+grid-template-columns:1fr;
+gap:18px;
+}
+
+/* CARD */
+
+.food-card{
+background:#1c1c1c;
+border-radius:12px;
+overflow:hidden;
+transition:0.3s;
+box-shadow:0 4px 12px rgba(0,0,0,0.4);
+}
+
+.food-card:hover{
+transform:translateY(-5px) scale(1.02);
+}
+
+.food-card img{
+width:100%;
+height:160px;
+object-fit:cover;
+}
+
+.food-info{
+padding:12px;
+text-align:center;
+}
+
+.top-tag{
+color:#ff9800;
+font-size:13px;
+margin-bottom:5px;
+}
+
+.category-tag{
+font-size:12px;
+color:#bbb;
+}
+
+.food-info button{
+background:#ff9800;
+border:none;
+padding:6px 12px;
+margin-top:8px;
+cursor:pointer;
+border-radius:5px;
+}
+
+/* CART */
+
+.cart{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+background:#000;
+padding:15px;
+border-top:3px solid #ff9800;
+max-height:260px;
+overflow:auto;
+z-index:200;
+}
+
+.cart-item{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin:6px 0;
+}
+
+.qty button{
+background:#444;
+border:none;
+color:white;
+padding:2px 6px;
+}
+
+.remove-btn{
+background:red;
+border:none;
+color:white;
+padding:2px 6px;
+}
+
+.total{
+margin-top:5px;
+color:#ff9800;
+}
+
+.order-btn{
+width:100%;
+margin-top:8px;
+padding:8px;
+background:#4CAF50;
+border:none;
+color:white;
+}
+
+/* BADGE */
+
+.cart-count{
+position:fixed;
+right:15px;
+top:15px;
+background:red;
+color:white;
+padding:4px 8px;
+border-radius:50%;
+}
+
+/* DESKTOP */
+
+@media(min-width:768px){
+
+body{padding-bottom:0}
+
+.food-container{
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+padding:40px;
+}
+
+.cart{
+position:fixed;
+right:0;
+top:100px;
+width:280px;
+}
+
+.search{
+width:250px;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<nav>
+
+<div class="nav-container">
+
+<div class="logo">Food Paradise</div>
+
+<div class="nav-buttons">
+<button onclick="showHome()">Home</button>
+<button onclick="showCategory('pizza')">Pizza</button>
+<button onclick="showCategory('burger')">Burger</button>
+<button onclick="showCategory('drink')">Drinks</button>
+<button onclick="showCategory('dessert')">Dessert</button>
+<button onclick="showCategory('fast')">Fast Food</button>
+<button onclick="showHistory()">History</button>
+</div>
+
+</div>
+
+<input class="search" placeholder="Search..." oninput="searchFood(this.value)">
+
+</nav>
+
+<div class="cart-count" id="cartCount">0</div>
+
+<section class="hero">
+<h1>Food Paradise</h1>
+<p>Order your favorite meals 🍔</p>
+</section>
+
+<div id="homePage">
+
+<h2 style="padding:20px;color:#ff9800">Top Sellers</h2>
+<div class="food-container" id="topMenu"></div>
+
+<h2 style="padding:20px;color:#ff9800">Full Menu</h2>
+<div class="food-container" id="menu"></div>
+
+</div>
+
+<div id="historyPage" style="display:none">
+
+<h2 style="padding:20px;color:#ff9800">Order History</h2>
+<div id="history"></div>
+
+</div>
+
+<div class="cart">
+
+<h3>Your Order</h3>
+<div id="orderList"></div>
+
+<div class="total">Total $<span id="total">0</span></div>
+
+<button class="order-btn" onclick="placeOrder()">Place Order</button>
+<div id="orderMsg"></div>
+
+</div>
+
+<script>
+
+let total=0
+let cart={}
+let cartItems=0
+
+const menuData=[
+
+// Top + existing
+{name:"Cheese Burger",img:"https://images.unsplash.com/photo-1550547660-d9450f859349",top:true,category:"burger"},
+{name:"Cold Coffee",img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735",top:true,category:"drink"},
+{name:"Chocolate Cake",img:"https://images.unsplash.com/photo-1578985545062-69928b1d9587",top:true,category:"dessert"},
+
+// NEW ITEMS (10+)
+{name:"Margherita Pizza",img:"https://images.unsplash.com/photo-1593560708920-61dd98c46a4e",category:"pizza"},
+{name:"Pepperoni Pizza",img:"https://images.unsplash.com/photo-1604382355076-af4b0eb60143",category:"pizza"},
+{name:"Veg Burger",img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd",category:"burger"},
+{name:"Chicken Burger",img:"https://images.unsplash.com/photo-1586190848861-99aa4a171e90",category:"burger"},
+{name:"French Fries",img:"https://images.unsplash.com/photo-1571091718767-18b5b1457add",category:"fast"},
+{name:"Ice Cream",img:"https://images.unsplash.com/photo-1563805042-7684c019e1cb",category:"dessert"},
+{name:"Lemon Soda",img:"https://images.unsplash.com/photo-1551024506-0bccd828d307",category:"drink"},
+{name:"Brownie",img:"https://images.unsplash.com/photo-1606313564200-e75d5e30476c",category:"dessert"}
+
+]
+
+function randomPrice(){return Math.floor(Math.random()*20)+5}
+menuData.forEach(f=>f.price=randomPrice())
+
+function createCard(food){
+return `
+<div class="food-card">
+<img src="${food.img}">
+<div class="food-info">
+${food.top ? '<div class="top-tag">⭐ Top Seller</div>' : ''}
+<div class="category-tag">${food.category}</div>
+<h3>${food.name}</h3>
+<p>$${food.price}</p>
+<button onclick="addToCart('${food.name}',${food.price})">Add</button>
+</div>
+</div>`
+}
+
+function loadMenu(){
+menu.innerHTML=""
+topMenu.innerHTML=""
+
+menuData.forEach(f=>{
+menu.innerHTML+=createCard(f)
+if(f.top) topMenu.innerHTML+=createCard(f)
+})
+}
+
+function showCategory(type){
+menu.innerHTML=""
+topMenu.innerHTML=""
+menuData.forEach(f=>{
+if(f.category===type){
+menu.innerHTML+=createCard(f)
+}
+})
+}
+
+function searchFood(text){
+menu.innerHTML=""
+menuData.forEach(f=>{
+if(f.name.toLowerCase().includes(text.toLowerCase())){
+menu.innerHTML+=createCard(f)
+}
+})
+}
+
+function addToCart(name,price){
+if(!cart[name]) cart[name]={price,qty:1}
+else cart[name].qty++
+updateCart()
+}
+
+function updateCart(){
+orderList.innerHTML=""
+total=0
+cartItems=0
+
+Object.keys(cart).forEach(name=>{
+let item=cart[name]
+total+=item.price*item.qty
+cartItems+=item.qty
+
+orderList.innerHTML+=`
+<div class="cart-item">
+<span>${name}</span>
+<div class="qty">
+<button onclick="changeQty('${name}',-1)">-</button>
+${item.qty}
+<button onclick="changeQty('${name}',1)">+</button>
+</div>
+<span>$${item.price*item.qty}</span>
+<button class="remove-btn" onclick="removeItem('${name}')">X</button>
+</div>`
+})
+
+totalEl.innerText=total
+cartCount.innerText=cartItems
+}
+
+function changeQty(name,v){
+cart[name].qty+=v
+if(cart[name].qty<=0) delete cart[name]
+updateCart()
+}
+
+function removeItem(name){
+delete cart[name]
+updateCart()
+}
+
+function placeOrder(){
+if(cartItems===0) return
+
+let history=JSON.parse(localStorage.getItem("orders"))||[]
+history.push({date:new Date().toLocaleString(),items:cart,total})
+localStorage.setItem("orders",JSON.stringify(history))
+
+cart={}
+updateCart()
+
+orderMsg.innerText="Order Confirmed 🍔"
+setTimeout(()=>orderMsg.innerText="",3000)
+
+loadHistory()
+}
+
+function loadHistory(){
+let history=JSON.parse(localStorage.getItem("orders"))||[]
+historyEl.innerHTML=""
+
+history.reverse().forEach(o=>{
+let items=""
+Object.keys(o.items).forEach(n=>{
+items+=`${n} x${o.items[n].qty}<br>`
+})
+
+historyEl.innerHTML+=`
+<div class="history-card">
+<b>${o.date}</b><br>${items}<br>Total $${o.total}
+</div>`
+})
+}
+
+function showHistory(){
+homePage.style.display="none"
+historyPage.style.display="block"
+}
+
+function showHome(){
+homePage.style.display="block"
+historyPage.style.display="none"
+}
+
+loadMenu()
+loadHistory()
+
+</script>
+
+</body>
+</html>
